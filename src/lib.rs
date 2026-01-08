@@ -1,6 +1,5 @@
 #![no_std]
 
-// use chrono::{DateTime, Datelike, Timelike as _, Utc};
 use defmt::Format;
 use serde::{Deserialize, Serialize};
 use uom::si::{
@@ -83,18 +82,8 @@ pub struct Measurements {
 pub enum AppState {
     #[default]
     StandBy,
-    Running,
+    Running(u32), // Frequency in Hz
     Fault,
-}
-
-impl AppState {
-    pub fn next(self) -> Self {
-        match self {
-            AppState::StandBy => AppState::Running,
-            AppState::Running => AppState::Fault,
-            AppState::Fault => AppState::StandBy,
-        }
-    }
 }
 
 // Format impls from here
