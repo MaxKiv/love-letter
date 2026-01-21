@@ -82,7 +82,7 @@ pub struct Measurements {
 pub enum AppState {
     #[default]
     StandBy,
-    Running(u32), // Frequency in Hz
+    Running(f32), // Frequency in Hz
     Fault,
 }
 
