@@ -40,13 +40,14 @@ pub struct Report {
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct Setpoint {
     // pub current_time: DateTimeWrapper,
-    pub mockloop_setpoint: Option<MockloopSetpoint>,
-    pub heart_controller_setpoint: Option<HeartControllerSetpoint>,
+    pub mockloop_setpoint: MockloopSetpoint,
+    pub heart_controller_setpoint: HeartControllerSetpoint,
 }
 
 /// Setpoint for the mockloop hemodynamics controller
-#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, Default)]
 pub struct MockloopSetpoint {
+    pub enable: bool,
     pub systemic_resistance: f32,
     pub pulmonary_resistance: f32,
     pub systemic_afterload_compliance: f32,
@@ -54,8 +55,10 @@ pub struct MockloopSetpoint {
 }
 
 /// Setpoint for the pneumatic heart prototype controller
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct HeartControllerSetpoint {
+    /// Enable the controller?
+    pub enable: bool,
     /// Desired heart rate
     pub heart_rate: Frequency,
     /// Desired regulator pressure
@@ -117,28 +120,33 @@ impl Format for Setpoint {
         use defmt::write;
 
         write!(fmt, "Setpoint( Heart: ");
-        match &self.heart_controller_setpoint {
-            Some(sp) => write!(
+        let heart_sp = &self.heart_controller_setpoint;
+        if heart_sp.enable {
+            write!(
                 fmt,
                 "(rate: hr: {}hz,  pressure: {}mbar, systole_ratio: {})",
-                sp.heart_rate.get::<hertz>(),
-                sp.pressure.get::<millibar>(),
-                sp.systole_ratio,
-            ),
-            None => write!(fmt, "DISABLED"),
-        };
-        write!(fmt, " - Loop: ");
-        match &self.mockloop_setpoint {
-            Some(sp) => write!(
+                heart_sp.heart_rate.get::<hertz>(),
+                heart_sp.pressure.get::<millibar>(),
+                heart_sp.systole_ratio,
+            );
+        } else {
+            write!(fmt, "DISABLED");
+        }
+
+        write!(fmt, "Setpoint( Heart: ");
+        let loop_sp = &self.mockloop_setpoint;
+        if loop_sp.enable {
+            write!(
                 fmt,
                 "(resistance sys/pul: {}/{}, compliance sys/pul {}/{})",
-                sp.systemic_resistance,
-                sp.pulmonary_resistance,
-                sp.systemic_afterload_compliance,
-                sp.pulmonary_afterload_compliance,
-            ),
-            None => write!(fmt, "DISABLED"),
-        };
+                loop_sp.systemic_resistance,
+                loop_sp.pulmonary_resistance,
+                loop_sp.systemic_afterload_compliance,
+                loop_sp.pulmonary_afterload_compliance,
+            );
+        } else {
+            write!(fmt, "DISABLED");
+        }
 
         write!(fmt, " )");
     }
