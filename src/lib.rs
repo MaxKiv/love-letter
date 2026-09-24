@@ -72,7 +72,9 @@ pub struct HeartControllerSetpoint {
 pub struct Measurements {
     /// Milliseconds since boot of mcu
     pub timestamp: u64,
-    pub regulator_actual_pressure: Pressure,
+    pub heart_actual_pressure: Pressure,
+    pub systemic_compliance_actual_pressure: Pressure,
+    pub pulmonary_compliance_actual_pressure: Pressure,
     pub systemic_flow: VolumeRate,
     pub pulmonary_flow: VolumeRate,
     pub systemic_preload_pressure: Pressure,
@@ -97,10 +99,10 @@ impl Format for Measurements {
 
         defmt::write!(
             fmt,
-            "Measurement(time: {} ms - reg: {} mmHg, sf: {} lpm, pf: {} lpm, spp: {} mmHg, sap: {} mmHg, ppp: {} mmHg, pap: {} mmHg)",
+            "Measurement(time: {} ms - reg: {} mBar, sf: {} lpm, pf: {} lpm, spp: {} mmHg, sap: {}
+            mmHg, ppp: {} mmHg, pap: {} mmHg, scp: {}mBar, pcp: {}mBar,)",
             self.timestamp,
-            self.regulator_actual_pressure
-                .get::<millimeter_of_mercury>(),
+            self.heart_actual_pressure.get::<millibar>(),
             self.systemic_flow.get::<liter_per_minute>(),
             self.systemic_flow.get::<liter_per_minute>(),
             self.systemic_preload_pressure
@@ -111,6 +113,8 @@ impl Format for Measurements {
                 .get::<millimeter_of_mercury>(),
             self.pulmonary_afterload_pressure
                 .get::<millimeter_of_mercury>(),
+            self.systemic_compliance_actual_pressure.get::<millibar>(),
+            self.pulmonary_compliance_actual_pressure.get::<millibar>(),
         );
     }
 }
@@ -132,8 +136,9 @@ impl Format for Setpoint {
         } else {
             write!(fmt, "DISABLED");
         }
+        write!(fmt, ", ");
 
-        write!(fmt, "Setpoint( Heart: ");
+        write!(fmt, "Loop: ");
         let loop_sp = &self.mockloop_setpoint;
         if loop_sp.enable {
             write!(
