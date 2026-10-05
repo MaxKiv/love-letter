@@ -45,17 +45,17 @@ pub struct Setpoint {
 }
 
 /// Setpoint for the mockloop hemodynamics controller
-#[derive(Debug, Deserialize, Serialize, Clone, Copy, Default)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, Default, PartialEq)]
 pub struct MockloopSetpoint {
     pub enable: bool,
     pub systemic_resistance: f32,
     pub pulmonary_resistance: f32,
-    pub systemic_afterload_compliance: f32,
-    pub pulmonary_afterload_compliance: f32,
+    pub systemic_afterload_compliance: Pressure,
+    pub pulmonary_afterload_compliance: Pressure,
 }
 
 /// Setpoint for the pneumatic heart prototype controller
-#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default, PartialEq)]
 pub struct HeartControllerSetpoint {
     /// Enable the controller?
     pub enable: bool,
@@ -146,8 +146,8 @@ impl Format for Setpoint {
                 "(resistance sys/pul: {}/{}, compliance sys/pul {}/{})",
                 loop_sp.systemic_resistance,
                 loop_sp.pulmonary_resistance,
-                loop_sp.systemic_afterload_compliance,
-                loop_sp.pulmonary_afterload_compliance,
+                loop_sp.systemic_afterload_compliance.get::<millibar>(),
+                loop_sp.pulmonary_afterload_compliance.get::<millibar>(),
             );
         } else {
             write!(fmt, "DISABLED");
